@@ -2,6 +2,7 @@ package com.example.displayjoke;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.net.Uri;
 import android.os.Bundle;
 
 public class JokeActivity extends AppCompatActivity {
@@ -13,4 +14,5 @@ public class JokeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_joke);
     }
+
 }
