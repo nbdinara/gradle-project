@@ -30,6 +30,29 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        shrunk {
+            minifyEnabled true
+            shrinkResources true
+        }
+    }
+
+    flavorDimensions "version"
+
+    productFlavors{
+        free {
+            dimension "version"
+            applicationIdSuffix ".free"
+            versionNameSuffix "-free"
+        }
+        paid {
+            dimension "version"
+            applicationIdSuffix ".paid"
+            versionNameSuffix "-paid"
+        }
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 }
 
@@ -48,4 +71,11 @@ dependencies {
     })
 
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:1.10.19'
+
+    testImplementation 'com.android.support.test:rules:1.0.2'
+    testImplementation 'com.android.support:support-annotations:28.0.0'
+    testImplementation 'com.android.support.test:runner:1.0.2'
+    testImplementation 'org.robolectric:robolectric:4.0'
+
 }
