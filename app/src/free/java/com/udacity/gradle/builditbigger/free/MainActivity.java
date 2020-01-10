@@ -12,10 +12,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.example.displayjoke.JokeActivity;
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
@@ -29,11 +34,17 @@ import java.security.NoSuchAlgorithmException;
 
 public class MainActivity extends AppCompatActivity {
 
+    private InterstitialAd mInterstitialAd;
+    public     ProgressBar progressBar;
+    public RelativeLayout relativeLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        progressBar = findViewById(R.id.progressBar);
+        relativeLayout = findViewById(R.id.relative_main);
 
         AdView mAdView = (AdView) findViewById(R.id.adView);
 
@@ -52,15 +63,40 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         mAdView.loadAd(adRequest);
 
+
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+
         final Button tellJoke = (Button) findViewById(R.id.button_joke);
         tellJoke.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                if (mInterstitialAd.isLoaded()) {
+                    mInterstitialAd.show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "The interstitial wasn't loaded yet.",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when the interstitial ad is closed.
+                relativeLayout.setVisibility(View.GONE);
+                progressBar.setVisibility(View.VISIBLE);
                 tellJoke();
+                progressBar.setVisibility(View.GONE);
+                relativeLayout.setVisibility(View.VISIBLE);
+
             }
         });
 
     }
+
+
 
     public void tellJoke(){
         new EndpointsAsyncTask().execute(this);
@@ -118,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
 class EndpointsAsyncTask extends AsyncTask<Context, Void, String> {
     private MyApi myApiService = null;
     private Context context;
+
 
     @Override
     protected String doInBackground(Context... params) {
