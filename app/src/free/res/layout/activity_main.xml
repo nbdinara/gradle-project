@@ -1,9 +1,7 @@
-
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:ads="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
-    android:layout_width="match_parent">
+    android:layout_width="match_parent"
+    xmlns:ads="http://schemas.android.com/apk/res-auto">
     <ProgressBar
         android:layout_marginTop="200dp"
         style="?android:attr/progressBarStyleLarge"
@@ -12,7 +10,6 @@
         android:id="@+id/progressBar"
         android:visibility="gone"
         android:layout_gravity="center"/>
-
     <RelativeLayout
         android:id="@+id/relative_main"
         android:layout_width="match_parent"
@@ -43,6 +40,7 @@
             android:layout_centerHorizontal="true"
             ads:adSize="BANNER"
             ads:adUnitId="@string/banner_ad_unit_id" />
+
     </RelativeLayout>
 </FrameLayout>
 

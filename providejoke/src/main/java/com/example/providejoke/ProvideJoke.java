@@ -1,10 +1,9 @@
 package com.example.providejoke;
 
-import javax.swing.text.View;
-
 public class ProvideJoke {
+    private static final String JOKE = "This is joke from the Java Library";
     public String getJoke() {
-        return "This is joke from the Java Library";
+        return JOKE;
     }
 
 

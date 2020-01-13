@@ -2,12 +2,8 @@
 package com.udacity.gradle.builditbigger.free;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,27 +12,23 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.example.displayjoke.JokeActivity;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.extensions.android.json.AndroidJsonFactory;
-import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.udacity.gradle.builditbigger.R;
-import com.udacity.gradle.builditbigger.backend.myApi.MyApi;
+import com.udacity.gradle.builditbigger.services.EndpointsAsyncTask;
 
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class MainActivity extends AppCompatActivity {
 
     private InterstitialAd mInterstitialAd;
-    public     ProgressBar progressBar;
-    public RelativeLayout relativeLayout;
+    private ProgressBar progressBar;
+    private RelativeLayout relativeLayout;
+    private String deviceId;
+    private AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         relativeLayout = findViewById(R.id.relative_main);
 
-        AdView mAdView = (AdView) findViewById(R.id.adView);
+        mAdView = (AdView) findViewById(R.id.adView);
 
 
 
@@ -54,33 +46,52 @@ public class MainActivity extends AppCompatActivity {
         // get test ads on a physical device. e.g.
         // "Use AdRequest.Builder.addTestDevice("ABCDEF012345") to get test ads on this device."
 
-        String android_id = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
-        String deviceId = md5(android_id).toUpperCase();
-
-        AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
-                .addTestDevice(deviceId)
-                .build();
-        mAdView.loadAd(adRequest);
-
-
-        mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+        setUpAndroidId();
+        setUAdRequest();
+        setUpInterstitialAd();
 
         final Button tellJoke = (Button) findViewById(R.id.button_joke);
         tellJoke.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
-                if (mInterstitialAd.isLoaded()) {
-                    mInterstitialAd.show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "The interstitial wasn't loaded yet.",
-                            Toast.LENGTH_LONG).show();
-                }
+                loadInterstitialAd();
             }
         });
 
+        configureInterstitialAd();
+
+    }
+
+    public void setUpAndroidId(){
+        String android_id = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
+        deviceId = md5(android_id).toUpperCase();
+    }
+
+    public void setUAdRequest(){
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .addTestDevice(deviceId)
+                .build();
+        mAdView.loadAd(adRequest);
+    }
+
+    public void setUpInterstitialAd(){
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(getResources().getString(R.string.interstitial_ad_unit_id));
+    }
+
+    public void loadInterstitialAd(){
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        if (mInterstitialAd.isLoaded()) {
+            mInterstitialAd.show();
+        } else {
+            Toast.makeText(getApplicationContext(),
+                    getResources().getString(R.string.interstitial_was_not_loaded_msg),
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void configureInterstitialAd(){
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {
@@ -93,14 +104,12 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
     }
-
-
 
     public void tellJoke(){
         new EndpointsAsyncTask().execute(this);
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -151,46 +160,3 @@ public class MainActivity extends AppCompatActivity {
 }
 
 
-class EndpointsAsyncTask extends AsyncTask<Context, Void, String> {
-    private MyApi myApiService = null;
-    private Context context;
-
-
-    @Override
-    protected String doInBackground(Context... params) {
-        if (myApiService == null) {  // Only do this once
-            MyApi.Builder builder = new MyApi.Builder(AndroidHttp.newCompatibleTransport(),
-                    new AndroidJsonFactory(), null)
-                    // options for running against local devappserver
-                    // - 10.0.2.2 is localhost's IP address in Android emulator
-                    // - turn off compression when running against local devappserver
-                    .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-                    .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-                        @Override
-                        public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-                            abstractGoogleClientRequest.setDisableGZipContent(true);
-                        }
-                    });
-            // end options for devappserver
-            myApiService = builder.build();
-            Log.d("BLAS", "doInBackground: " + myApiService);
-        }
-
-        context = params[0];
-
-        try {
-            return myApiService.sayHi().execute().getData();
-        } catch (IOException e) {
-            Log.d("BLA", "doInBackground: ");
-            return e.getMessage();
-        }
-    }
-
-    @Override
-    protected void onPostExecute(String result) {
-        Intent intent = new Intent(context, JokeActivity.class);
-        intent.putExtra(JokeActivity.JOKE_KEY, result);
-        context.startActivity(intent);
-    }
-
-}
