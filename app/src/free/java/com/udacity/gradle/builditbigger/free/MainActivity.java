@@ -101,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
                 tellJoke();
                 progressBar.setVisibility(View.GONE);
                 relativeLayout.setVisibility(View.VISIBLE);
-
             }
         });
     }
